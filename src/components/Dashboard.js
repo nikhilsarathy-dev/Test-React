@@ -56,6 +56,48 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
     setCurrentViewedWindow(validation.windows[index]);
   };
 
+  // Calculate visit timeline positions for rolling window overlay
+  const getVisitTimelineData = () => {
+    if (stays.length === 0) return null;
+
+    const totalVisaDays = (visaEnd - visaStart) / (1000 * 60 * 60 * 24);
+    const criticalWindow = validation.criticalWindow;
+
+    const visits = stays.map(stay => {
+      const startPercent = ((stay.start - visaStart) / (1000 * 60 * 60 * 24)) / totalVisaDays * 100;
+      const days = daysBetween(stay.start, stay.end);
+      const durationPercent = (days / totalVisaDays) * 100;
+      const months = (days / 30).toFixed(1);
+
+      return {
+        stay,
+        startPercent,
+        durationPercent,
+        days,
+        months
+      };
+    });
+
+    // Calculate rolling window overlay position
+    if (criticalWindow) {
+      const windowStartPercent = ((criticalWindow.start - visaStart) / (1000 * 60 * 60 * 24)) / totalVisaDays * 100;
+      const windowEndPercent = ((criticalWindow.end - visaStart) / (1000 * 60 * 60 * 24)) / totalVisaDays * 100;
+
+      return {
+        visits,
+        rollingWindow: {
+          startPercent: Math.max(0, windowStartPercent),
+          widthPercent: Math.min(100, windowEndPercent) - Math.max(0, windowStartPercent),
+          days: criticalWindow.days
+        }
+      };
+    }
+
+    return { visits, rollingWindow: null };
+  };
+
+  const timelineData = getVisitTimelineData();
+
   return (
     <div className="dashboard">
       <div className={`validation-status ${validation.statusClass}`}>
@@ -66,14 +108,16 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
 
         <div className="metrics-grid">
           <div className="metric-card">
-            <div className="metric-label">Critical Window</div>
+            <div className="metric-label">Critical Window (Max in 18mo)</div>
             <div className="metric-value">{validation.maxDaysInWindow}d</div>
             <div className="metric-sublabel">~{validation.monthsConsumed} mo</div>
+            <div className="metric-note">↑ Changes when visits are spaced</div>
           </div>
           <div className="metric-card">
-            <div className="metric-label">Total Days</div>
+            <div className="metric-label">Total Days (All Visits)</div>
             <div className="metric-value">{validation.totalDaysAllVisits}d</div>
             <div className="metric-sublabel">~{validation.totalMonths} mo</div>
+            <div className="metric-note">↑ Sum of all visit durations</div>
           </div>
         </div>
 
@@ -82,6 +126,41 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
             {validation.maxDaysInWindow} / {maxDaysIn18Months}
           </div>
         </div>
+
+        {timelineData && (
+          <div className="visits-timeline-wrapper">
+            <div className="visits-timeline">
+              {/* Rolling window overlay */}
+              {timelineData.rollingWindow && (
+                <div
+                  className="rolling-window-timeline-overlay"
+                  style={{
+                    left: `${timelineData.rollingWindow.startPercent}%`,
+                    width: `${timelineData.rollingWindow.widthPercent}%`
+                  }}
+                  title={`18-Month Critical Window: ${timelineData.rollingWindow.days} days`}
+                >
+                  <div className="rolling-window-label">🔄 18mo Window</div>
+                </div>
+              )}
+
+              {/* Visit blocks */}
+              {timelineData.visits.map((visit) => (
+                <div
+                  key={visit.stay.id}
+                  className={`visit-block ${visit.stay.completed ? 'completed' : 'current'}`}
+                  style={{
+                    left: `${visit.startPercent}%`,
+                    width: `${visit.durationPercent}%`
+                  }}
+                  title={`${visit.stay.name}: ${visit.stay.start.toLocaleDateString()} - ${visit.stay.end.toLocaleDateString()}`}
+                >
+                  {visit.stay.name}: {visit.months}mo ({visit.days}d)
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="window-cards">
           {validation.windows.map((window, index) => (
