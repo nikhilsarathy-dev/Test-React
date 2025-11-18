@@ -40,11 +40,7 @@ function App() {
     const newEnd = new Date(newStart);
     newEnd.setMonth(newEnd.getMonth() + 3);
 
-    if (newEnd > VISA_END) {
-      alert('Cannot add stay beyond visa validity period.');
-      return;
-    }
-
+    // Allow planning beyond current visa (user will need to apply for new visa)
     setStays([...stays, {
       id: nextId,
       name: `Stay #${nextId}`,

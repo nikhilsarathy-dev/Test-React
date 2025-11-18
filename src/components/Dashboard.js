@@ -1,53 +1,72 @@
 import React, { useMemo } from 'react';
-import { calculateAllWindows, daysBetween } from '../utils/dateUtils';
+import { calculateCriticalWindow, calculateAllWindows, daysBetween, checkContinuousStayViolation } from '../utils/dateUtils';
 
 const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months, currentViewedWindow, setCurrentViewedWindow }) => {
   const validation = useMemo(() => {
-    // Check visa validity
-    const visaValidityIssue = stays.some(stay => stay.end > visaEnd);
-
-    // Calculate total days
+    // Calculate total days across all visits
     const totalDaysAllVisits = stays.reduce((sum, stay) => sum + daysBetween(stay.start, stay.end), 0);
 
-    // Calculate windows
-    const windows = calculateAllWindows(stays, daysIn18Months);
-    const criticalWindow = windows.reduce((max, window) => window.days > max.days ? window : max, windows[0] || { days: 0 });
+    // Calculate CRITICAL WINDOW: 18 months ending at the latest visit
+    const criticalWindow = calculateCriticalWindow(stays, daysIn18Months);
+    const criticalWindowDays = criticalWindow.days;
 
-    const maxDaysInWindow = criticalWindow?.days || 0;
-    const percentage = (maxDaysInWindow / maxDaysIn18Months) * 100;
-    const monthsConsumed = (maxDaysInWindow / 30).toFixed(1);
+    // Check for continuous stay violation (any visit >= 365 days)
+    const continuousStayCheck = checkContinuousStayViolation(stays);
+
+    // Check if any visits are beyond current visa
+    const visitsOutsideVisa = stays.filter(stay => stay.end > visaEnd);
+    const requiresNewVisa = visitsOutsideVisa.length > 0;
+
+    // Calculate all windows for detailed analysis
+    const windows = calculateAllWindows(stays, daysIn18Months);
+
+    const percentage = (criticalWindowDays / maxDaysIn18Months) * 100;
+    const monthsConsumed = (criticalWindowDays / 30).toFixed(1);
     const totalMonths = (totalDaysAllVisits / 30).toFixed(1);
 
     let statusClass, statusTitle, statusMessage;
 
-    if (visaValidityIssue) {
+    // Priority 1: Continuous stay violation
+    if (continuousStayCheck.violation) {
       statusClass = 'invalid';
-      statusTitle = '❌ Exceeds Visa Validity';
-      statusMessage = 'Plan extends beyond visa period';
-    } else if (maxDaysInWindow > maxDaysIn18Months) {
+      statusTitle = '❌ Continuous Stay Violation';
+      statusMessage = `${continuousStayCheck.longestStay?.name || 'A visit'} exceeds 12 months (${continuousStayCheck.days} days). Visa auto-cancels at 365 days continuous stay.`;
+    }
+    // Priority 2: Rolling 18-month window violation
+    else if (criticalWindowDays > maxDaysIn18Months) {
       statusClass = 'invalid';
-      statusTitle = '❌ Exceeds Limit';
-      statusMessage = `${maxDaysInWindow} days (${(maxDaysInWindow - maxDaysIn18Months)} over)`;
-    } else if (maxDaysInWindow > 330) {
+      statusTitle = '❌ Exceeds 18-Month Limit';
+      statusMessage = `${criticalWindowDays} days in current 18-month window (${criticalWindowDays - maxDaysIn18Months} days over). Rule applies even with new visa.`;
+    }
+    // Priority 3: Close to limit
+    else if (criticalWindowDays > 330) {
       statusClass = 'warning';
       statusTitle = '⚠️ Very Close to Limit';
-      statusMessage = `${maxDaysInWindow} days (${maxDaysIn18Months - maxDaysInWindow} buffer)`;
-    } else {
+      statusMessage = `${criticalWindowDays} days in window (only ${maxDaysIn18Months - criticalWindowDays} days buffer remaining)`;
+    }
+    // All good
+    else {
       statusClass = 'valid';
       statusTitle = '✅ Within Limits';
-      statusMessage = `${maxDaysInWindow} days (${maxDaysIn18Months - maxDaysInWindow} buffer)`;
+      statusMessage = requiresNewVisa
+        ? `${criticalWindowDays} days used (${maxDaysIn18Months - criticalWindowDays} buffer). Note: New visa needed for visits beyond ${visaEnd.toLocaleDateString()}.`
+        : `${criticalWindowDays} days used (${maxDaysIn18Months - criticalWindowDays} days buffer remaining)`;
     }
 
     return {
       statusClass,
       statusTitle,
       statusMessage,
-      maxDaysInWindow,
+      criticalWindowDays,
       totalDaysAllVisits,
       monthsConsumed,
       totalMonths,
       percentage,
       criticalWindow,
+      requiresNewVisa,
+      visitsOutsideVisa,
+      continuousStayViolation: continuousStayCheck.violation,
+      continuousStayDays: continuousStayCheck.days,
       windows: windows.sort((a, b) => b.days - a.days).slice(0, 3)
     };
   }, [stays, visaEnd, maxDaysIn18Months, daysIn18Months]);
@@ -108,22 +127,28 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
 
         <div className="metrics-grid">
           <div className="metric-card">
-            <div className="metric-label">Critical Window (Max in 18mo)</div>
-            <div className="metric-value">{validation.maxDaysInWindow}d</div>
+            <div className="metric-label">Critical Window (18mo from latest)</div>
+            <div className="metric-value">{validation.criticalWindowDays}d</div>
             <div className="metric-sublabel">~{validation.monthsConsumed} mo</div>
-            <div className="metric-note">↑ Changes when visits are spaced</div>
+            <div className="metric-note">Days in 18mo ending at latest visit (can be 0)</div>
           </div>
           <div className="metric-card">
             <div className="metric-label">Total Days (All Visits)</div>
             <div className="metric-value">{validation.totalDaysAllVisits}d</div>
             <div className="metric-sublabel">~{validation.totalMonths} mo</div>
-            <div className="metric-note">↑ Sum of all visit durations</div>
+            <div className="metric-note">Cumulative across all visits</div>
           </div>
         </div>
 
+        {validation.requiresNewVisa && (
+          <div className="visa-notice">
+            ⚠️ Planning beyond current visa ({visaEnd.toLocaleDateString()}). New visa required. 18-month rule still applies.
+          </div>
+        )}
+
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${Math.min(validation.percentage, 100)}%` }}>
-            {validation.maxDaysInWindow} / {maxDaysIn18Months}
+            {validation.criticalWindowDays} / {maxDaysIn18Months}
           </div>
         </div>
 

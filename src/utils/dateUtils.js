@@ -24,6 +24,46 @@ export const getMonthsArray = (visaStart, visaEnd) => {
   return months;
 };
 
+// Calculate rolling window from the END of the latest visit (forward-looking planning)
+export const calculateCriticalWindow = (stays, daysIn18Months) => {
+  if (stays.length === 0) {
+    return {
+      start: new Date(),
+      end: new Date(),
+      days: 0,
+      name: 'No visits'
+    };
+  }
+
+  // Find the latest visit end date (the planning horizon)
+  const latestVisitEnd = stays.reduce((max, stay) =>
+    stay.end > max ? stay.end : max, stays[0].end
+  );
+
+  // Calculate 18-month window ENDING at latest visit
+  const windowStart = new Date(latestVisitEnd.getTime() - daysIn18Months * 24 * 60 * 60 * 1000);
+  const windowEnd = latestVisitEnd;
+
+  // Count days that fall within this window
+  let daysInWindow = 0;
+  stays.forEach(stay => {
+    const overlapStart = new Date(Math.max(stay.start, windowStart));
+    const overlapEnd = new Date(Math.min(stay.end, windowEnd));
+
+    if (overlapStart <= overlapEnd) {
+      daysInWindow += daysBetween(overlapStart, overlapEnd);
+    }
+  });
+
+  return {
+    start: windowStart,
+    end: windowEnd,
+    days: daysInWindow,
+    name: 'Current 18-month window'
+  };
+};
+
+// Calculate all possible 18-month windows for analysis
 export const calculateAllWindows = (stays, daysIn18Months) => {
   const windows = [];
 
@@ -63,4 +103,18 @@ export const calculateAllWindows = (stays, daysIn18Months) => {
   });
 
   return windows;
+};
+
+// Check for continuous stay violations (single visit >= 365 days)
+export const checkContinuousStayViolation = (stays) => {
+  const longestStay = stays.reduce((max, stay) => {
+    const days = daysBetween(stay.start, stay.end);
+    return days > max.days ? { stay, days } : max;
+  }, { stay: null, days: 0 });
+
+  return {
+    violation: longestStay.days >= 365,
+    longestStay: longestStay.stay,
+    days: longestStay.days
+  };
 };

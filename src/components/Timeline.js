@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { getMonthsArray, dateToPosition, positionToDate, calculateAllWindows } from '../utils/dateUtils';
+import { getMonthsArray, dateToPosition, positionToDate, calculateCriticalWindow } from '../utils/dateUtils';
 import VisitBar from './VisitBar';
 
 const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months, onUpdateStay, onDeleteStay, showWindow, currentViewedWindow }) => {
@@ -42,7 +42,8 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
       const newStart = positionToDate(newLeft, visaStart, visaEnd);
       const newEnd = positionToDate(newLeft + dragState.stayWidth, visaStart, visaEnd);
 
-      if (newStart >= visaStart && newEnd <= visaEnd) {
+      // Only restrict starting before visa start, allow planning beyond visa end
+      if (newStart >= visaStart) {
         onUpdateStay(dragState.stayId, { start: newStart, end: newEnd });
       }
     } else if (dragState.type === 'resize') {
@@ -51,6 +52,7 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
         const newStart = Math.max(0, Math.min(dateToPosition(stay.end, visaStart, visaEnd) - 1, currentStart + deltaPercent));
         const newStartDate = positionToDate(newStart, visaStart, visaEnd);
 
+        // Only restrict starting before visa start
         if (newStartDate >= visaStart && newStartDate < stay.end) {
           onUpdateStay(dragState.stayId, { start: newStartDate });
           setDragState({ ...dragState, startX: e.clientX });
@@ -60,7 +62,8 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
         const newEnd = Math.max(dateToPosition(stay.start, visaStart, visaEnd) + 1, Math.min(100, currentEnd + deltaPercent));
         const newEndDate = positionToDate(newEnd, visaStart, visaEnd);
 
-        if (newEndDate <= visaEnd && newEndDate > stay.start) {
+        // Allow extending beyond visa end (planning for new visa)
+        if (newEndDate > stay.start) {
           onUpdateStay(dragState.stayId, { end: newEndDate });
           setDragState({ ...dragState, startX: e.clientX });
         }
@@ -84,9 +87,9 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragState]);
 
-  // Calculate rolling window overlay
-  const windows = calculateAllWindows(stays, daysIn18Months);
-  const windowToDisplay = currentViewedWindow || windows.reduce((max, window) => window.days > max.days ? window : max, windows[0]);
+  // Calculate critical rolling window (18 months from latest visit)
+  const criticalWindow = calculateCriticalWindow(stays, daysIn18Months);
+  const windowToDisplay = currentViewedWindow || criticalWindow;
 
   return (
     <div className="timeline-container">
