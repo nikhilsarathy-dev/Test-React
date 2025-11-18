@@ -60,6 +60,10 @@
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  -webkit-tap-highlight-color: rgba(102, 126, 234, 0.3);
+  touch-action: manipulation;
+  min-height: 44px;
+  user-select: none;
 }
 
 .button:hover {
@@ -381,6 +385,9 @@
   transition: all 0.2s;
   min-width: 120px;
   flex-shrink: 0;
+  -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .window-card:hover {
@@ -448,6 +455,9 @@
   position: relative;
   min-width: 100%;
   min-height: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
 }
 
 /* Ensure timeline has proper width for readability */
@@ -524,6 +534,9 @@
   color: white;
   font-weight: bold;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  -webkit-tap-highlight-color: rgba(102, 126, 234, 0.3);
+  touch-action: none;
+  user-select: none;
 }
 
 .stay-bar:hover {
@@ -720,30 +733,9 @@
     padding: 5px;
   }
 
-  .header h1 {
-    font-size: 1.2em;
-  }
-
-  .header p {
-    font-size: 0.75em;
-  }
-
-  .controls {
-    padding: 10px;
-    gap: 8px;
-  }
-
   .button {
     padding: 8px 14px;
     font-size: 0.85em;
-  }
-
-  .visa-info {
-    width: 100%;
-    text-align: center;
-    margin-left: 0;
-    margin-top: 5px;
-    font-size: 0.8em;
   }
 
   .validation-status {
@@ -792,8 +784,25 @@
     padding: 10px;
   }
 
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
   .timeline-title {
     font-size: 1em;
+  }
+
+  .timeline-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .timeline-controls .button {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 6px;
   }
 
   .timeline-wrapper {
@@ -812,6 +821,25 @@
 
   .stay-dates {
     font-size: 0.75em;
+    gap: 5px;
+  }
+
+  .date-badge {
+    padding: 3px 5px;
+    border-width: 1px;
+  }
+
+  .date-label {
+    font-size: 0.65em;
+  }
+
+  .date-value {
+    font-size: 0.85em;
+  }
+
+  .visit-flag {
+    font-size: 1em;
+    top: -6px;
   }
 
   .stay-duration {
@@ -894,29 +922,55 @@
 
   .stay-dates {
     font-size: 0.7em;
+    gap: 4px;
+    flex-direction: column;
+  }
+
+  .date-separator {
+    display: none;
+  }
+
+  .date-badge {
+    padding: 2px 4px;
+  }
+
+  .date-label {
+    font-size: 0.6em;
+  }
+
+  .date-value {
+    font-size: 0.8em;
+  }
+
+  .visit-flag {
+    font-size: 0.9em;
+    top: -5px;
+  }
+
+  .timeline-controls .button {
+    font-size: 0.75em;
+    padding: 6px 4px;
   }
 }
 
 /* Landscape mobile */
 @media (max-height: 500px) and (orientation: landscape) {
-  .header {
-    padding: 8px 15px;
-  }
-
-  .header h1 {
-    font-size: 1em;
-  }
-
-  .header p {
-    display: none;
-  }
-
   .dashboard {
     position: relative;
   }
 
   .timeline-wrapper {
     min-height: 300px;
+  }
+
+  .timeline-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .timeline-controls .button {
+    padding: 6px 10px;
+    font-size: 0.8em;
   }
 }
 
