@@ -165,8 +165,15 @@
 }
 
 .metric-sublabel {
-  font-size: 0.8em;
-  color: #888;
+  font-size: 1.1em;
+  color: #333;
+  font-weight: 700;
+  margin-top: 4px;
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .metric-note {
@@ -232,7 +239,7 @@
 
 .visits-timeline {
   width: 100%;
-  height: 50px;
+  height: 70px;
   background: #f8f9fa;
   border-radius: 8px;
   position: relative;
@@ -260,9 +267,9 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: rgba(255, 255, 255, 0.95);
-  padding: 5px 12px;
-  border-radius: 14px;
-  font-size: 0.75em;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 0.9em;
   font-weight: bold;
   color: #e67e00;
   white-space: nowrap;
@@ -277,14 +284,14 @@
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.75em;
+  font-size: 0.95em;
   font-weight: bold;
   z-index: 3;
   transition: all 0.2s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 8px;
+  padding: 0 12px;
   border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
@@ -325,19 +332,20 @@
 
 .visit-flag {
   position: absolute;
-  top: -8px;
-  font-size: 1.2em;
+  top: -12px;
+  font-size: 2em;
   z-index: 6;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
   animation: wave 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .start-flag {
-  left: -2px;
+  left: -10px;
 }
 
 .end-flag {
-  right: -2px;
+  right: -10px;
 }
 
 @keyframes wave {
@@ -561,7 +569,7 @@
 }
 
 .stay-name {
-  font-size: 1.1em;
+  font-size: 1.3em;
   font-weight: bold;
 }
 
@@ -569,42 +577,63 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 0.85em;
+  gap: 10px;
+  font-size: 1em;
 }
 
 .date-badge {
-  background: rgba(255, 255, 255, 0.25);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 8px;
-  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  padding: 6px 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  backdrop-filter: blur(5px);
+  gap: 3px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.date-badge.start-date {
+  border-color: #4CAF50;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(255, 255, 255, 0.95) 50%);
+}
+
+.date-badge.end-date {
+  border-color: #FF5722;
+  background: linear-gradient(135deg, rgba(255, 87, 34, 0.2) 0%, rgba(255, 255, 255, 0.95) 50%);
 }
 
 .date-label {
-  font-size: 0.7em;
+  font-size: 0.75em;
   font-weight: bold;
-  letter-spacing: 0.5px;
-  opacity: 0.9;
+  letter-spacing: 0.8px;
+  opacity: 1;
+}
+
+.start-date .date-label {
+  color: #2E7D32;
+}
+
+.end-date .date-label {
+  color: #D84315;
 }
 
 .date-value {
-  font-size: 0.9em;
+  font-size: 1.05em;
   font-weight: bold;
+  color: #333;
 }
 
 .date-separator {
-  font-size: 1.2em;
+  font-size: 1.5em;
   font-weight: bold;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .stay-duration {
-  font-size: 0.8em;
-  opacity: 0.85;
+  font-size: 0.95em;
+  opacity: 0.95;
+  font-weight: 600;
 }
 
 .handle {
@@ -766,18 +795,22 @@
     font-size: 0.65em;
   }
 
+  .metric-sublabel {
+    font-size: 0.95em;
+  }
+
   .visits-timeline {
-    height: 40px;
+    height: 55px;
   }
 
   .visit-block {
-    font-size: 0.65em;
-    padding: 0 4px;
+    font-size: 0.8em;
+    padding: 0 6px;
   }
 
   .rolling-window-label {
-    font-size: 0.65em;
-    padding: 3px 8px;
+    font-size: 0.75em;
+    padding: 4px 10px;
   }
 
   .timeline-container {
@@ -838,12 +871,12 @@
   }
 
   .visit-flag {
-    font-size: 1em;
-    top: -6px;
+    font-size: 1.5em;
+    top: -8px;
   }
 
   .stay-duration {
-    font-size: 0.7em;
+    font-size: 0.85em;
   }
 
   .handle {
@@ -891,18 +924,22 @@
     font-size: 0.6em;
   }
 
+  .metric-sublabel {
+    font-size: 0.85em;
+  }
+
   .visits-timeline {
-    height: 35px;
+    height: 45px;
   }
 
   .visit-block {
-    font-size: 0.6em;
-    padding: 0 3px;
+    font-size: 0.7em;
+    padding: 0 4px;
   }
 
   .rolling-window-label {
-    font-size: 0.6em;
-    padding: 2px 6px;
+    font-size: 0.65em;
+    padding: 3px 7px;
   }
 
   .window-cards {
@@ -943,8 +980,8 @@
   }
 
   .visit-flag {
-    font-size: 0.9em;
-    top: -5px;
+    font-size: 1.3em;
+    top: -7px;
   }
 
   .timeline-controls .button {
