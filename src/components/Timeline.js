@@ -6,7 +6,18 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
   const timelineRef = useRef(null);
   const [dragState, setDragState] = useState(null);
 
-  const months = getMonthsArray(visaStart, visaEnd);
+  // Calculate dynamic timeline end (extend beyond visa if needed)
+  const getTimelineEnd = () => {
+    if (stays.length === 0) return visaEnd;
+    const latestVisitEnd = stays.reduce((max, stay) => stay.end > max ? stay.end : max, visaEnd);
+    // Add 6 months buffer beyond latest visit for planning
+    const bufferEnd = new Date(latestVisitEnd);
+    bufferEnd.setMonth(bufferEnd.getMonth() + 6);
+    return bufferEnd > visaEnd ? bufferEnd : visaEnd;
+  };
+
+  const timelineEnd = getTimelineEnd();
+  const months = getMonthsArray(visaStart, timelineEnd);
 
   const handleMouseDown = (e, stayId, type, handle = null) => {
     const stay = stays.find(s => s.id === stayId);
@@ -39,18 +50,18 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
 
     if (dragState.type === 'move') {
       const newLeft = Math.max(0, Math.min(100, dragState.startLeft + deltaPercent));
-      const newStart = positionToDate(newLeft, visaStart, visaEnd);
-      const newEnd = positionToDate(newLeft + dragState.stayWidth, visaStart, visaEnd);
+      const newStart = positionToDate(newLeft, visaStart, timelineEnd);
+      const newEnd = positionToDate(newLeft + dragState.stayWidth, visaStart, timelineEnd);
 
-      // Only restrict starting before visa start, allow planning beyond visa end
+      // Only restrict starting before visa start
       if (newStart >= visaStart) {
         onUpdateStay(dragState.stayId, { start: newStart, end: newEnd });
       }
     } else if (dragState.type === 'resize') {
       if (dragState.handle === 'start') {
-        const currentStart = dateToPosition(stay.start, visaStart, visaEnd);
-        const newStart = Math.max(0, Math.min(dateToPosition(stay.end, visaStart, visaEnd) - 1, currentStart + deltaPercent));
-        const newStartDate = positionToDate(newStart, visaStart, visaEnd);
+        const currentStart = dateToPosition(stay.start, visaStart, timelineEnd);
+        const newStart = Math.max(0, Math.min(dateToPosition(stay.end, visaStart, timelineEnd) - 1, currentStart + deltaPercent));
+        const newStartDate = positionToDate(newStart, visaStart, timelineEnd);
 
         // Only restrict starting before visa start
         if (newStartDate >= visaStart && newStartDate < stay.end) {
@@ -58,11 +69,11 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
           setDragState({ ...dragState, startX: e.clientX });
         }
       } else if (dragState.handle === 'end') {
-        const currentEnd = dateToPosition(stay.end, visaStart, visaEnd);
-        const newEnd = Math.max(dateToPosition(stay.start, visaStart, visaEnd) + 1, Math.min(100, currentEnd + deltaPercent));
-        const newEndDate = positionToDate(newEnd, visaStart, visaEnd);
+        const currentEnd = dateToPosition(stay.end, visaStart, timelineEnd);
+        const newEnd = Math.max(dateToPosition(stay.start, visaStart, timelineEnd) + 1, Math.min(100, currentEnd + deltaPercent));
+        const newEndDate = positionToDate(newEnd, visaStart, timelineEnd);
 
-        // Allow extending beyond visa end (planning for new visa)
+        // Allow extending beyond visa end
         if (newEndDate > stay.start) {
           onUpdateStay(dragState.stayId, { end: newEndDate });
           setDragState({ ...dragState, startX: e.clientX });
@@ -129,8 +140,8 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
                     : 'valid'
                 }`}
                 style={{
-                  left: `${dateToPosition(windowToDisplay.start, visaStart, visaEnd)}%`,
-                  width: `${dateToPosition(windowToDisplay.end, visaStart, visaEnd) - dateToPosition(windowToDisplay.start, visaStart, visaEnd)}%`
+                  left: `${dateToPosition(windowToDisplay.start, visaStart, timelineEnd)}%`,
+                  width: `${dateToPosition(windowToDisplay.end, visaStart, timelineEnd) - dateToPosition(windowToDisplay.start, visaStart, timelineEnd)}%`
                 }}
               >
                 <div className="window-label">🔄 18-Month Window</div>
@@ -151,7 +162,7 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
                 stay={stay}
                 index={index}
                 visaStart={visaStart}
-                visaEnd={visaEnd}
+                visaEnd={timelineEnd}
                 onMouseDown={handleMouseDown}
                 onDelete={onDeleteStay}
               />

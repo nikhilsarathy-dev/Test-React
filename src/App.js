@@ -36,9 +36,9 @@ function App() {
   const addNewStay = () => {
     const lastStay = stays[stays.length - 1];
     const newStart = new Date(lastStay.end);
-    newStart.setDate(newStart.getDate() + 30);
+    newStart.setDate(newStart.getDate() + 60); // 2 months gap
     const newEnd = new Date(newStart);
-    newEnd.setMonth(newEnd.getMonth() + 3);
+    newEnd.setMonth(newEnd.getMonth() + 2); // 2 months duration
 
     // Allow planning beyond current visa (user will need to apply for new visa)
     setStays([...stays, {

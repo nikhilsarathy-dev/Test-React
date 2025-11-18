@@ -510,26 +510,30 @@
   position: absolute;
   top: 0;
   height: 100%;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
-  border: 2px dashed rgba(102, 126, 234, 0.5);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.35) 0%, rgba(255, 152, 0, 0.35) 100%);
+  border: 3px dashed rgba(255, 193, 7, 0.8);
   border-radius: 8px;
   pointer-events: none;
   z-index: 1;
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
 }
 
 .rolling-window-overlay.valid {
-  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(33, 136, 56, 0.1) 100%);
-  border-color: rgba(40, 167, 69, 0.4);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 152, 0, 0.3) 100%);
+  border-color: rgba(255, 193, 7, 0.7);
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.25);
 }
 
 .rolling-window-overlay.warning {
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.12) 0%, rgba(255, 152, 0, 0.12) 100%);
-  border-color: rgba(255, 193, 7, 0.5);
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.4) 0%, rgba(255, 87, 34, 0.4) 100%);
+  border-color: rgba(255, 152, 0, 0.85);
+  box-shadow: 0 0 25px rgba(255, 152, 0, 0.4);
 }
 
 .rolling-window-overlay.invalid {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.12) 0%, rgba(200, 35, 51, 0.12) 100%);
-  border-color: rgba(220, 53, 69, 0.5);
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.4) 0%, rgba(200, 35, 51, 0.4) 100%);
+  border-color: rgba(220, 53, 69, 0.85);
+  box-shadow: 0 0 25px rgba(220, 53, 69, 0.4);
 }
 
 .window-label {
@@ -537,13 +541,14 @@
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.95);
   padding: 6px 14px;
   border-radius: 20px;
   font-weight: bold;
   font-size: 0.75em;
-  color: #667eea;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #e67e00;
+  border: 2px solid #ffc107;
+  box-shadow: 0 2px 10px rgba(255, 193, 7, 0.4);
   white-space: nowrap;
 }
 
@@ -552,17 +557,18 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.95);
   padding: 15px 25px;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border: 2px solid #ffc107;
+  box-shadow: 0 4px 20px rgba(255, 193, 7, 0.5);
 }
 
 .window-stats-title {
   font-size: 1.3em;
   font-weight: bold;
-  color: #333;
+  color: #e67e00;
   margin-bottom: 3px;
 }
 
