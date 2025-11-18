@@ -23,25 +23,27 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
     const stay = stays.find(s => s.id === stayId);
     if (stay.completed) return;
 
-    const timelineRect = timelineRef.current.getBoundingClientRect();
-    const stayBar = e.currentTarget.parentElement || e.currentTarget;
-    const rect = stayBar.getBoundingClientRect();
+    // Calculate position from the actual stay dates, not DOM position
+    const stayStartPercent = dateToPosition(stay.start, visaStart, timelineEnd);
+    const stayEndPercent = dateToPosition(stay.end, visaStart, timelineEnd);
+    const stayWidth = stayEndPercent - stayStartPercent;
 
     setDragState({
       type,
       stayId,
       startX: e.clientX,
-      startLeft: ((rect.left - timelineRect.left) / timelineRect.width) * 100,
-      stayWidth: (rect.width / timelineRect.width) * 100,
+      startLeft: stayStartPercent,
+      stayWidth: stayWidth,
       handle,
-      timelineRect
+      originalStart: stay.start,
+      originalEnd: stay.end
     });
 
     e.preventDefault();
   };
 
   const handleMouseMove = (e) => {
-    if (!dragState) return;
+    if (!dragState || !timelineRef.current) return;
 
     const stay = stays.find(s => s.id === dragState.stayId);
     const timelineRect = timelineRef.current.getBoundingClientRect();
@@ -49,7 +51,7 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
     const deltaPercent = (deltaX / timelineRect.width) * 100;
 
     if (dragState.type === 'move') {
-      const newLeft = Math.max(0, Math.min(100, dragState.startLeft + deltaPercent));
+      const newLeft = dragState.startLeft + deltaPercent;
       const newStart = positionToDate(newLeft, visaStart, timelineEnd);
       const newEnd = positionToDate(newLeft + dragState.stayWidth, visaStart, timelineEnd);
 
@@ -106,7 +108,11 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
     <div className="timeline-container">
       <h3 className="timeline-title">📅 Timeline View</h3>
       <div className="timeline-wrapper">
-        <div className="timeline" ref={timelineRef}>
+        <div
+          className="timeline"
+          ref={timelineRef}
+          style={{ '--month-count': months.length }}
+        >
           <div className="month-labels">
             {months.map((month, index) => (
               <div

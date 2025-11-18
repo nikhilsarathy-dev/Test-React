@@ -200,25 +200,26 @@
 
 .visits-timeline {
   width: 100%;
-  height: 45px;
-  background: #f0f0f0;
+  height: 50px;
+  background: #f8f9fa;
   border-radius: 8px;
   position: relative;
   overflow: hidden;
-  border: 1px solid #ddd;
+  border: 2px solid #dee2e6;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .rolling-window-timeline-overlay {
   position: absolute;
   top: 0;
   height: 100%;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.25) 0%, rgba(118, 75, 162, 0.25) 100%);
-  border: 2px solid rgba(102, 126, 234, 0.6);
-  border-top: none;
-  border-bottom: none;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 152, 0, 0.4) 100%);
+  border-left: 3px solid rgba(255, 193, 7, 0.8);
+  border-right: 3px solid rgba(255, 193, 7, 0.8);
   pointer-events: none;
   z-index: 2;
   transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
 }
 
 .rolling-window-label {
@@ -227,13 +228,14 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: rgba(255, 255, 255, 0.95);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.7em;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 0.75em;
   font-weight: bold;
-  color: #667eea;
+  color: #e67e00;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid #ffc107;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
 }
 
 .visit-block {
@@ -243,7 +245,7 @@
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.7em;
+  font-size: 0.75em;
   font-weight: bold;
   z-index: 3;
   transition: all 0.2s;
@@ -251,6 +253,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 0 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .visit-block.completed {
@@ -263,7 +267,7 @@
 
 .visit-block:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   z-index: 4;
 }
 
@@ -350,6 +354,11 @@
   min-height: 100%;
 }
 
+/* Ensure timeline has proper width for readability */
+.timeline-wrapper .timeline {
+  min-width: max(100%, calc(var(--month-count, 36) * 60px));
+}
+
 .month-labels {
   display: flex;
   position: sticky;
@@ -358,6 +367,7 @@
   border-bottom: 2px solid #ddd;
   background: white;
   z-index: 50;
+  min-width: 100%;
 }
 
 .month-label {
