@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Visa Planner - Drag & Drop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button.delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .timeline-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-header h3 {
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .zoom-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .zoom-btn {
+            background: #e0e0e0;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .zoom-btn:hover {
+            background: #d0d0d0;
+        }
+        
+        .timeline-wrapper {
+            position: relative;
+            overflow-x: auto;
+            overflow-y: visible;
+            background: #fafafa;
+            border-radius: 10px;
+            padding: 20px 10px;
+            min-height: 250px;
+        }
+        
+        .timeline {
+            position: relative;
+            height: 200px;
+            min-width: 100%;
+        }
+        
+        .month-labels {
+            display: flex;
+            position: sticky;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            border-bottom: 2px solid #ddd;
+            background: white;
+            z-index: 10;
+        }
+        
+        .month-label {
+            flex: 1;
+            text-align: center;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #333;
+            border-right: 1px solid #e0e0e0;
+            padding: 5px 2px;
+            white-space: nowrap;
+            overflow: visible;
+        }
+        
+        .month-label.year-start {
+            font-weight: bold;
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .timeline-grid {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+        
+        .month-column {
+            flex: 1;
+            border-right: 1px solid #e0e0e0;
+            position: relative;
+        }
+        
+        .month-column.year-start {
+            border-left: 3px solid #667eea;
+        }
+        
+        .stays-layer {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            min-height: 600px;
+        }
+
+        .rolling-window-overlay {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            border: 2px dashed rgba(102, 126, 234, 0.5);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .rolling-window-overlay.valid {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.12) 0%, rgba(33, 136, 56, 0.12) 100%);
+            border-color: rgba(40, 167, 69, 0.4);
+        }
+
+        .rolling-window-overlay.warning {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.15) 100%);
+            border-color: rgba(255, 193, 7, 0.5);
+        }
+
+        .rolling-window-overlay.invalid {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(200, 35, 51, 0.15) 100%);
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+
+        .rolling-window-overlay.hidden {
+            display: none;
+        }
+
+        .window-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85em;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            pointer-events: auto;
+        }
+
+        .window-stats {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            pointer-events: auto;
+        }
+
+        .window-stats-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .window-stats-subtitle {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .window-stats-dates {
+            font-size: 0.85em;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .stay-bar {
+            position: absolute;
+            height: 100px;
+            min-width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            cursor: move;
+            transition: transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            overflow: visible;
+        }
+        
+        .stay-bar:hover {
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+            z-index: 10;
+        }
+        
+        .stay-bar.dragging {
+            opacity: 0.7;
+            z-index: 100;
+        }
+        
+        .stay-bar.completed {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+        
+        .stay-bar.invalid {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .stay-content {
+            flex: 1;
+            pointer-events: none;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.3;
+        }
+        
+        .stay-name {
+            font-size: 1.2em;
+            margin-bottom: 3px;
+        }
+        
+        .stay-dates {
+            font-size: 1em;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        
+        .stay-duration {
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+        
+        .handle {
+            width: 20px;
+            height: 100%;
+            cursor: ew-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .handle:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .handle.left {
+            border-radius: 8px 0 0 8px;
+        }
+        
+        .handle.right {
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 24px;
+            height: 24px;
+            background: #dc3545;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            z-index: 3;
+        }
+        
+        .stay-bar:hover .delete-btn {
+            display: flex;
+        }
+        
+        .validation-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        
+        .validation-panel h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+        
+        .validation-status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .validation-status.valid {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+        
+        .validation-status.invalid {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        
+        .validation-status.warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+        
+        .status-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .validation-status.valid .status-title {
+            color: #28a745;
+        }
+        
+        .validation-status.invalid .status-title {
+            color: #dc3545;
+        }
+        
+        .validation-status.warning .status-title {
+            color: #856404;
+        }
+        
+        .status-details {
+            line-height: 1.8;
+        }
+        
+        .window-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .window-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .window-card.critical {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .window-card.active-window {
+            border: 2px solid #667eea;
+            background: #f0f4ff;
+        }
+
+        .window-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .window-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .window-card p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .visits-timeline {
+            width: 100%;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            position: relative;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .visit-block {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .visit-block.completed {
+            background: #28a745;
+        }
+        
+        .visit-block.current {
+            background: #667eea;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .info-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛂 Interactive Visa Planner</h1>
+            <p>Drag and adjust stays to plan within the 12-month per 18-month period constraint</p>
+        </div>
+        
+        <div class="content">
+            <div class="controls">
+                <button class="button" onclick="addNewStay()">➕ Add New Visit</button>
+                <button class="button" onclick="resetToDefault()">🔄 Reset to Default</button>
+                <button class="button" id="toggleWindowBtn" onclick="toggleRollingWindow()">👁️ Hide 18-Month Window</button>
+                <div style="flex: 1"></div>
+                <div style="color: #666; font-size: 0.9em;">
+                    <strong>Visa Valid:</strong> Oct 1, 2024 - Sep 30, 2027
+                </div>
+            </div>
+            
+            <div class="validation-panel">
+                <h3>📊 Validation & Analysis</h3>
+                <div id="validationStatus"></div>
+            </div>
+            
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <h3>📅 Timeline View</h3>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="changeZoom(-1)">➖</button>
+                        <button class="zoom-btn" onclick="changeZoom(1)">➕</button>
+                    </div>
+                </div>
+                
+                <div class="timeline-wrapper" id="timelineWrapper">
+                    <div class="timeline" id="timeline">
+                        <div class="month-labels" id="monthLabels"></div>
+                        <div class="timeline-grid" id="timelineGrid"></div>
+                        <div class="stays-layer" id="staysLayer"></div>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%);"></div>
+                        <span>Completed Stay</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                        <span>Current/Future Stay</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);"></div>
+                        <span>Invalid (Exceeds Limit)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="validation-panel">
+                <h3>🔍 Critical Window Details</h3>
+                <div id="windowAnalysis" class="window-analysis"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-tooltip" id="tooltip"></div>
+    
+    <script>
+        // Configuration
+        const VISA_START = new Date('2024-10-01');
+        const VISA_END = new Date('2027-09-30');
+        const MAX_DAYS_IN_18_MONTHS = 365;
+        const DAYS_IN_18_MONTHS = 548;
+        
+        let zoom = 1;
+        let stays = [
+            {
+                id: 1,
+                name: 'Stay #1',
+                start: new Date('2024-10-28'),
+                end: new Date('2025-03-22'),
+                completed: true
+            },
+            {
+                id: 2,
+                name: 'Stay #2',
+                start: new Date('2025-07-27'),
+                end: new Date('2026-01-07'),
+                completed: false
+            }
+        ];
+
+        let nextId = 3;
+        let dragState = null;
+        let showRollingWindow = true;
+        let currentViewedWindow = null; // null = critical window, otherwise specific window
+        
+        // Initialize
+        function init() {
+            renderTimeline();
+            renderStays();
+            validateStays();
+        }
+        
+        // Generate months array from visa start to visa end
+        function getMonthsArray() {
+            const months = [];
+            let current = new Date(VISA_START);
+            while (current <= VISA_END) {
+                months.push(new Date(current));
+                current.setMonth(current.getMonth() + 1);
+            }
+            return months;
+        }
+        
+        // Render timeline grid and labels
+        function renderTimeline() {
+            const months = getMonthsArray();
+            const monthLabelsDiv = document.getElementById('monthLabels');
+            const timelineGridDiv = document.getElementById('timelineGrid');
+            
+            monthLabelsDiv.innerHTML = '';
+            timelineGridDiv.innerHTML = '';
+            
+            months.forEach((month, index) => {
+                const monthLabel = document.createElement('div');
+                monthLabel.className = 'month-label';
+                if (month.getMonth() === 0) {
+                    monthLabel.classList.add('year-start');
+                    monthLabel.textContent = month.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                } else {
+                    monthLabel.textContent = month.toLocaleDateString('en-US', { month: 'short' });
+                }
+                monthLabelsDiv.appendChild(monthLabel);
+                
+                const monthColumn = document.createElement('div');
+                monthColumn.className = 'month-column';
+                if (month.getMonth() === 0) {
+                    monthColumn.classList.add('year-start');
+                }
+                timelineGridDiv.appendChild(monthColumn);
+            });
+            
+            // Adjust timeline width based on zoom
+            const timeline = document.getElementById('timeline');
+            const baseWidth = months.length * 60;
+            timeline.style.minWidth = `${baseWidth * zoom}px`;
+        }
+        
+        // Convert date to position percentage
+        function dateToPosition(date) {
+            const totalDays = (VISA_END - VISA_START) / (1000 * 60 * 60 * 24);
+            const daysFromStart = (date - VISA_START) / (1000 * 60 * 60 * 24);
+            return (daysFromStart / totalDays) * 100;
+        }
+        
+        // Convert position percentage to date
+        function positionToDate(position) {
+            const totalDays = (VISA_END - VISA_START) / (1000 * 60 * 60 * 24);
+            const daysFromStart = (position / 100) * totalDays;
+            return new Date(VISA_START.getTime() + daysFromStart * 24 * 60 * 60 * 1000);
+        }
+        
+        // Calculate days between dates
+        function daysBetween(start, end) {
+            return Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        }
+        
+        // Render all stays
+        function renderStays() {
+            const staysLayer = document.getElementById('staysLayer');
+            staysLayer.innerHTML = '';
+            
+            stays.forEach((stay, index) => {
+                const stayBar = document.createElement('div');
+                stayBar.className = 'stay-bar';
+                stayBar.id = `stay-${stay.id}`;
+                stayBar.style.top = `${index * 120}px`;
+                
+                if (stay.completed) {
+                    stayBar.classList.add('completed');
+                }
+                
+                const leftPos = dateToPosition(stay.start);
+                const rightPos = dateToPosition(stay.end);
+                stayBar.style.left = `${leftPos}%`;
+                stayBar.style.width = `${rightPos - leftPos}%`;
+                
+                const days = daysBetween(stay.start, stay.end);
+                
+                stayBar.innerHTML = `
+                    <div class="handle left" data-stay-id="${stay.id}" data-handle="start">⫷</div>
+                    <div class="stay-content">
+                        <div class="stay-name">${stay.name}</div>
+                        <div class="stay-dates">${stay.start.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}<br>to<br>${stay.end.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</div>
+                        <div class="stay-duration">${days} days (~${(days/30).toFixed(1)} months)</div>
+                    </div>
+                    <div class="handle right" data-stay-id="${stay.id}" data-handle="end">⫸</div>
+                    ${!stay.completed ? '<div class="delete-btn" onclick="deleteStay(' + stay.id + ')">✕</div>' : ''}
+                `;
+                
+                // Add drag listeners
+                if (!stay.completed) {
+                    stayBar.addEventListener('mousedown', startDrag);
+                }
+                
+                // Add handle listeners
+                const handles = stayBar.querySelectorAll('.handle');
+                handles.forEach(handle => {
+                    handle.addEventListener('mousedown', startHandleDrag);
+                });
+                
+                staysLayer.appendChild(stayBar);
+            });
+
+            // Render rolling window overlay after stays
+            renderRollingWindow();
+        }
+
+        // Render the 18-month rolling window overlay
+        function renderRollingWindow() {
+            // Remove existing overlay
+            const existingOverlay = document.querySelector('.rolling-window-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+
+            if (!showRollingWindow || stays.length === 0) {
+                return;
+            }
+
+            // Calculate all windows
+            const windows = calculateAllWindows();
+            if (windows.length === 0) return;
+
+            // Determine which window to display
+            let windowToDisplay = currentViewedWindow;
+            if (!windowToDisplay) {
+                // Show the critical window (most constrained)
+                windowToDisplay = windows.reduce((max, window) =>
+                    window.days > max.days ? window : max
+                );
+            }
+
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'rolling-window-overlay';
+
+            // Set status class based on days
+            if (windowToDisplay.days > MAX_DAYS_IN_18_MONTHS) {
+                overlay.classList.add('invalid');
+            } else if (windowToDisplay.days > 330) {
+                overlay.classList.add('warning');
+            } else {
+                overlay.classList.add('valid');
+            }
+
+            // Position the overlay
+            const startPos = dateToPosition(windowToDisplay.start);
+            const endPos = dateToPosition(windowToDisplay.end);
+            overlay.style.left = `${startPos}%`;
+            overlay.style.width = `${endPos - startPos}%`;
+
+            // Add label
+            const label = document.createElement('div');
+            label.className = 'window-label';
+            label.textContent = '🔄 18-Month Rolling Window';
+            overlay.appendChild(label);
+
+            // Add stats in the center
+            const stats = document.createElement('div');
+            stats.className = 'window-stats';
+            const buffer = MAX_DAYS_IN_18_MONTHS - windowToDisplay.days;
+            const months = (windowToDisplay.days / 30).toFixed(1);
+
+            stats.innerHTML = `
+                <div class="window-stats-title">${windowToDisplay.days} / ${MAX_DAYS_IN_18_MONTHS} days</div>
+                <div class="window-stats-subtitle">(~${months} months)</div>
+                <div class="window-stats-subtitle">${buffer >= 0 ? buffer + ' days buffer' : Math.abs(buffer) + ' days OVER'}</div>
+                <div class="window-stats-dates">${windowToDisplay.start.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})} - ${windowToDisplay.end.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</div>
+            `;
+            overlay.appendChild(stats);
+
+            // Add to stays layer
+            const staysLayer = document.getElementById('staysLayer');
+            staysLayer.appendChild(overlay);
+        }
+
+        // Calculate all 18-month windows
+        function calculateAllWindows() {
+            const windows = [];
+
+            // Add windows starting from each stay's start date
+            stays.forEach(stay => {
+                windows.push({
+                    start: new Date(stay.start),
+                    end: new Date(stay.start.getTime() + DAYS_IN_18_MONTHS * 24 * 60 * 60 * 1000),
+                    name: `From ${stay.name} start`,
+                    stayRef: stay
+                });
+            });
+
+            // Add windows ending at each stay's end date (backward 18 months)
+            stays.forEach(stay => {
+                const windowStart = new Date(stay.end.getTime() - DAYS_IN_18_MONTHS * 24 * 60 * 60 * 1000);
+                windows.push({
+                    start: windowStart,
+                    end: new Date(stay.end),
+                    name: `To ${stay.name} end`,
+                    stayRef: stay
+                });
+            });
+
+            // Calculate days in each window
+            windows.forEach(window => {
+                let daysInWindow = 0;
+                stays.forEach(stay => {
+                    const overlapStart = new Date(Math.max(stay.start, window.start));
+                    const overlapEnd = new Date(Math.min(stay.end, window.end));
+
+                    if (overlapStart <= overlapEnd) {
+                        daysInWindow += daysBetween(overlapStart, overlapEnd);
+                    }
+                });
+                window.days = daysInWindow;
+            });
+
+            return windows;
+        }
+
+        // Toggle rolling window visibility
+        function toggleRollingWindow() {
+            showRollingWindow = !showRollingWindow;
+            const btn = document.getElementById('toggleWindowBtn');
+            btn.textContent = showRollingWindow ? '👁️ Hide 18-Month Window' : '👁️ Show 18-Month Window';
+            renderRollingWindow();
+        }
+
+        // View a specific window (called when clicking window cards)
+        function viewWindow(window) {
+            currentViewedWindow = window;
+            renderRollingWindow();
+        }
+
+        // Reset to viewing critical window
+        function viewCriticalWindow() {
+            currentViewedWindow = null;
+            renderRollingWindow();
+            validateStays(); // Refresh to update the active indicator
+        }
+
+        // Drag functionality for moving entire stay
+        function startDrag(e) {
+            if (e.target.classList.contains('handle') || e.target.classList.contains('delete-btn')) {
+                return;
+            }
+            
+            const stayId = parseInt(e.currentTarget.id.split('-')[1]);
+            const stay = stays.find(s => s.id === stayId);
+            
+            if (stay.completed) return;
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            const timelineRect = document.getElementById('timeline').getBoundingClientRect();
+            
+            dragState = {
+                type: 'move',
+                stayId: stayId,
+                startX: e.clientX,
+                startLeft: ((rect.left - timelineRect.left) / timelineRect.width) * 100,
+                stayWidth: (rect.width / timelineRect.width) * 100
+            };
+            
+            e.currentTarget.classList.add('dragging');
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            e.preventDefault();
+        }
+        
+        // Drag functionality for handles
+        function startHandleDrag(e) {
+            const stayId = parseInt(e.target.dataset.stayId);
+            const handle = e.target.dataset.handle;
+            const stay = stays.find(s => s.id === stayId);
+            
+            if (stay.completed) return;
+            
+            dragState = {
+                type: 'resize',
+                stayId: stayId,
+                handle: handle,
+                startX: e.clientX
+            };
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        
+        function onDrag(e) {
+            if (!dragState) return;
+            
+            const timeline = document.getElementById('timeline');
+            const timelineRect = timeline.getBoundingClientRect();
+            const stay = stays.find(s => s.id === dragState.stayId);
+            
+            if (dragState.type === 'move') {
+                const deltaX = e.clientX - dragState.startX;
+                const deltaPercent = (deltaX / timelineRect.width) * 100;
+                const newLeft = Math.max(0, Math.min(100, dragState.startLeft + deltaPercent));
+                
+                const newStart = positionToDate(newLeft);
+                const newEnd = positionToDate(newLeft + dragState.stayWidth);
+                
+                // Keep within visa validity period
+                if (newStart >= VISA_START && newEnd <= VISA_END) {
+                    stay.start = newStart;
+                    stay.end = newEnd;
+                    renderStays();
+                    validateStays();
+                }
+            } else if (dragState.type === 'resize') {
+                const deltaX = e.clientX - dragState.startX;
+                const deltaPercent = (deltaX / timelineRect.width) * 100;
+                
+                if (dragState.handle === 'start') {
+                    const currentStart = dateToPosition(stay.start);
+                    const newStart = Math.max(0, Math.min(dateToPosition(stay.end) - 1, currentStart + deltaPercent));
+                    const newStartDate = positionToDate(newStart);
+                    
+                    if (newStartDate >= VISA_START && newStartDate < stay.end) {
+                        stay.start = newStartDate;
+                        dragState.startX = e.clientX;
+                        renderStays();
+                        validateStays();
+                    }
+                } else if (dragState.handle === 'end') {
+                    const currentEnd = dateToPosition(stay.end);
+                    const newEnd = Math.max(dateToPosition(stay.start) + 1, Math.min(100, currentEnd + deltaPercent));
+                    const newEndDate = positionToDate(newEnd);
+                    
+                    if (newEndDate <= VISA_END && newEndDate > stay.start) {
+                        stay.end = newEndDate;
+                        dragState.startX = e.clientX;
+                        renderStays();
+                        validateStays();
+                    }
+                }
+            }
+        }
+        
+        function stopDrag(e) {
+            if (dragState) {
+                const stayBar = document.getElementById(`stay-${dragState.stayId}`);
+                if (stayBar) {
+                    stayBar.classList.remove('dragging');
+                }
+                dragState = null;
+            }
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+        
+        // Validate stays and check 18-month windows
+        function validateStays() {
+            const validationDiv = document.getElementById('validationStatus');
+            const windowAnalysisDiv = document.getElementById('windowAnalysis');
+
+            // Check if any stay extends beyond visa validity
+            let visaValidityIssue = false;
+            stays.forEach(stay => {
+                if (stay.end > VISA_END) {
+                    visaValidityIssue = true;
+                }
+            });
+
+            // Calculate total days across ALL visits
+            let totalDaysAllVisits = 0;
+            stays.forEach(stay => {
+                totalDaysAllVisits += daysBetween(stay.start, stay.end);
+            });
+
+            // Calculate all rolling 18-month windows
+            const windows = calculateAllWindows();
+
+            // Find critical window (most constrained)
+            let maxDaysInWindow = 0;
+            let criticalWindow = null;
+
+            windows.forEach(window => {
+                if (window.days > maxDaysInWindow) {
+                    maxDaysInWindow = window.days;
+                    criticalWindow = window;
+                }
+            });
+            
+            // Update stay bar colors
+            stays.forEach(stay => {
+                const stayBar = document.getElementById(`stay-${stay.id}`);
+                if (stayBar && !stay.completed) {
+                    if (maxDaysInWindow > MAX_DAYS_IN_18_MONTHS) {
+                        stayBar.classList.add('invalid');
+                    } else {
+                        stayBar.classList.remove('invalid');
+                    }
+                }
+            });
+            
+            // Display validation status
+            const percentage = (maxDaysInWindow / MAX_DAYS_IN_18_MONTHS) * 100;
+            const monthsConsumed = (maxDaysInWindow / 30).toFixed(1);
+            const totalMonths = (totalDaysAllVisits / 30).toFixed(1);
+            let statusClass, statusTitle, statusMessage;
+
+            if (visaValidityIssue) {
+                statusClass = 'invalid';
+                statusTitle = '❌ Invalid - Exceeds Visa Validity';
+                statusMessage = `Your plan extends beyond the visa validity period (ends ${VISA_END.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}). You would need to apply for a visa extension or new visa. <strong>Note:</strong> A new visa will still follow the rolling 18-month rule from your existing stays, not a fresh restart.`;
+            } else if (maxDaysInWindow > MAX_DAYS_IN_18_MONTHS) {
+                statusClass = 'invalid';
+                statusTitle = '❌ Invalid - Exceeds Limit';
+                statusMessage = `Your plan violates the 12-month rule. You have <strong>${maxDaysInWindow} days (~${monthsConsumed} months)</strong> in the critical 18-month window, exceeding the limit by <strong>${maxDaysInWindow - MAX_DAYS_IN_18_MONTHS} days</strong>.`;
+            } else if (maxDaysInWindow > 330) {
+                statusClass = 'warning';
+                statusTitle = '⚠️ Caution - Very Close to Limit';
+                statusMessage = `Your plan is technically valid but leaves very little buffer. You have <strong>${maxDaysInWindow} days (~${monthsConsumed} months)</strong> in the critical window, with only <strong>${MAX_DAYS_IN_18_MONTHS - maxDaysInWindow} days</strong> of buffer remaining.`;
+            } else {
+                statusClass = 'valid';
+                statusTitle = '✅ Valid - Within Limits';
+                statusMessage = `Your plan complies with visa requirements. You have <strong>${maxDaysInWindow} days (~${monthsConsumed} months)</strong> in the critical window, with a safe buffer of <strong>${MAX_DAYS_IN_18_MONTHS - maxDaysInWindow} days</strong>.`;
+            }
+            
+            validationDiv.innerHTML = `
+                <div class="validation-status ${statusClass}">
+                    <div class="status-title">${statusTitle}</div>
+                    <div class="status-details">
+                        <p>${statusMessage}</p>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0;">
+                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Critical Window (Net Balance)</div>
+                                <div style="font-size: 1.5em; font-weight: bold; color: #667eea;">${maxDaysInWindow} days</div>
+                                <div style="font-size: 0.9em; color: #666;">(~${monthsConsumed} months)</div>
+                                <div style="font-size: 0.85em; color: #999; margin-top: 3px;">Including gaps that unwind days</div>
+                            </div>
+                            <div style="background: white; padding: 15px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total Days (All Visits)</div>
+                                <div style="font-size: 1.5em; font-weight: bold; color: #28a745;">${totalDaysAllVisits} days</div>
+                                <div style="font-size: 0.9em; color: #666;">(~${totalMonths} months)</div>
+                                <div style="font-size: 0.85em; color: #999; margin-top: 3px;">Across ${stays.length} visit${stays.length !== 1 ? 's' : ''}</div>
+                            </div>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(percentage, 100)}%">
+                                ${maxDaysInWindow} / ${MAX_DAYS_IN_18_MONTHS} days
+                            </div>
+                        </div>
+                        <div class="visits-timeline" id="visitsTimeline"></div>
+                        <p><strong>Critical Window:</strong> ${criticalWindow.start.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})} - ${criticalWindow.end.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Render visits timeline
+            const visitsTimeline = document.getElementById('visitsTimeline');
+            if (visitsTimeline) {
+                const totalDays = (VISA_END - VISA_START) / (1000 * 60 * 60 * 24);
+                stays.forEach(stay => {
+                    const startPercent = ((stay.start - VISA_START) / (1000 * 60 * 60 * 24)) / totalDays * 100;
+                    const days = daysBetween(stay.start, stay.end);
+                    const durationPercent = (days / totalDays) * 100;
+                    const months = (days / 30).toFixed(1);
+                    
+                    const visitBlock = document.createElement('div');
+                    visitBlock.className = `visit-block ${stay.completed ? 'completed' : 'current'}`;
+                    visitBlock.style.left = `${startPercent}%`;
+                    visitBlock.style.width = `${durationPercent}%`;
+                    visitBlock.textContent = `${stay.name}: ${months}mo (${days}d)`;
+                    visitBlock.title = `${stay.start.toLocaleDateString()} - ${stay.end.toLocaleDateString()}`;
+                    visitsTimeline.appendChild(visitBlock);
+                });
+            }
+            
+            // Display window analysis
+            const sortedWindows = windows.sort((a, b) => b.days - a.days).slice(0, 4);
+            windowAnalysisDiv.innerHTML = `
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.95em;">
+                    💡 <strong>Tip:</strong> Click any window card below to visualize it on the timeline
+                    ${currentViewedWindow ? ' | <a href="#" onclick="viewCriticalWindow(); return false;" style="color: #667eea;">Reset to Critical Window</a>' : ''}
+                </p>
+            ` + sortedWindows
+                .map((window, index) => {
+                    const windowId = `window-${index}`;
+                    const isViewed = currentViewedWindow &&
+                        currentViewedWindow.start.getTime() === window.start.getTime() &&
+                        currentViewedWindow.end.getTime() === window.end.getTime();
+                    return `
+                    <div class="window-card ${index === 0 ? 'critical' : ''} ${isViewed ? 'active-window' : ''}"
+                         onclick="viewWindowByIndex(${index})"
+                         style="cursor: pointer; ${isViewed ? 'box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transform: scale(1.02);' : ''}"
+                         onmouseover="this.style.transform='scale(1.02)'"
+                         onmouseout="this.style.transform='${isViewed ? 'scale(1.02)' : 'scale(1)'}'"
+                         title="Click to visualize this window on the timeline">
+                        <h4>${index === 0 ? '🔴 Critical Window' : `Window ${index + 1}`} ${isViewed ? '👁️' : ''}</h4>
+                        <p><strong>${window.name}</strong></p>
+                        <p>${window.start.toLocaleDateString('en-US', {month: 'short', year: 'numeric'})} - ${window.end.toLocaleDateString('en-US', {month: 'short', year: 'numeric'})}</p>
+                        <p><strong>Total days:</strong> ${window.days} / ${MAX_DAYS_IN_18_MONTHS}</p>
+                        <p><strong>Buffer:</strong> ${MAX_DAYS_IN_18_MONTHS - window.days} days</p>
+                    </div>
+                `}).join('');
+
+            // Store sorted windows for reference
+            window.sortedWindows = sortedWindows;
+        }
+
+        // View window by index (called when clicking window cards)
+        function viewWindowByIndex(index) {
+            if (window.sortedWindows && window.sortedWindows[index]) {
+                currentViewedWindow = window.sortedWindows[index];
+                renderRollingWindow();
+                validateStays(); // Refresh to update the active indicator
+            }
+        }
+        
+        // Add new stay
+        function addNewStay() {
+            const lastStay = stays[stays.length - 1];
+            const newStart = new Date(lastStay.end);
+            newStart.setDate(newStart.getDate() + 30);
+            const newEnd = new Date(newStart);
+            newEnd.setMonth(newEnd.getMonth() + 3);
+            
+            if (newEnd > VISA_END) {
+                alert('Cannot add stay beyond visa validity period.');
+                return;
+            }
+            
+            stays.push({
+                id: nextId++,
+                name: `Stay #${nextId - 1}`,
+                start: newStart,
+                end: newEnd,
+                completed: false
+            });
+            
+            renderStays();
+            validateStays();
+        }
+        
+        // Delete stay
+        function deleteStay(stayId) {
+            const stay = stays.find(s => s.id === stayId);
+            if (stay && !stay.completed) {
+                if (confirm(`Delete ${stay.name}?`)) {
+                    stays = stays.filter(s => s.id !== stayId);
+                    renderStays();
+                    validateStays();
+                }
+            }
+        }
+        
+        // Reset to default
+        function resetToDefault() {
+            if (confirm('Reset to default stays?')) {
+                stays = [
+                    {
+                        id: 1,
+                        name: 'Stay #1',
+                        start: new Date('2024-10-28'),
+                        end: new Date('2025-03-22'),
+                        completed: true
+                    },
+                    {
+                        id: 2,
+                        name: 'Stay #2',
+                        start: new Date('2025-07-27'),
+                        end: new Date('2026-01-07'),
+                        completed: false
+                    }
+                ];
+                nextId = 3;
+                renderStays();
+                validateStays();
+            }
+        }
+        
+        // Zoom controls
+        function changeZoom(delta) {
+            zoom = Math.max(0.5, Math.min(3, zoom + delta * 0.25));
+            renderTimeline();
+            renderStays();
+        }
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
