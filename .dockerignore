@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+build
+.git
+.gitignore
+README.md
+.env
+.DS_Store
+*.md
+visa-planner-draggable.html
+visa-planner-draggable copy.html
