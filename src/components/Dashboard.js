@@ -126,7 +126,7 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
         </div>
 
         <div className="metrics-grid">
-          <div className="metric-card">
+          <div className={`metric-card critical-window-card ${validation.statusClass}`}>
             <div className="metric-label">Critical Window (18mo from latest)</div>
             <div className="metric-value">{validation.criticalWindowDays}d</div>
             <div className="metric-sublabel">~{validation.monthsConsumed} mo</div>
@@ -180,7 +180,9 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
                   }}
                   title={`${visit.stay.name}: ${visit.stay.start.toLocaleDateString()} - ${visit.stay.end.toLocaleDateString()}`}
                 >
-                  {visit.stay.name}: {visit.months}mo ({visit.days}d)
+                  <div className="visit-pole start-pole"></div>
+                  <span className="visit-block-text">{visit.stay.name}: {visit.months}mo ({visit.days}d)</span>
+                  <div className="visit-pole end-pole"></div>
                 </div>
               ))}
             </div>

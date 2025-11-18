@@ -42,9 +42,15 @@ const VisitBar = ({ stay, index, visaStart, visaEnd, onMouseDown, onDelete }) =>
       <div className="stay-content">
         <div className="stay-name">{stay.name}</div>
         <div className="stay-dates">
-          {stay.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-          <br />to<br />
-          {stay.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          <div className="date-badge start-date">
+            <div className="date-label">START</div>
+            <div className="date-value">{stay.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+          </div>
+          <div className="date-separator">→</div>
+          <div className="date-badge end-date">
+            <div className="date-label">END</div>
+            <div className="date-value">{stay.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+          </div>
         </div>
         <div className="stay-duration">{days} days (~{(days / 30).toFixed(1)} mo)</div>
       </div>

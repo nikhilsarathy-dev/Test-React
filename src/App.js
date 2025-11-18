@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import './styles/App.css';
-import Header from './components/Header';
 import Dashboard from './components/Dashboard';
-import Controls from './components/Controls';
 import Timeline from './components/Timeline';
 
 const VISA_START = new Date('2024-10-01');
@@ -76,16 +74,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header />
       <div className="content">
-        <Controls
-          onAddStay={addNewStay}
-          onReset={resetToDefault}
-          showWindow={showWindow}
-          onToggleWindow={() => setShowWindow(!showWindow)}
-          visaStart={VISA_START}
-          visaEnd={VISA_END}
-        />
         <Dashboard
           stays={stays}
           visaStart={VISA_START}
@@ -105,6 +94,9 @@ function App() {
           onDeleteStay={deleteStay}
           showWindow={showWindow}
           currentViewedWindow={currentViewedWindow}
+          onAddStay={addNewStay}
+          onReset={resetToDefault}
+          onToggleWindow={() => setShowWindow(!showWindow)}
         />
       </div>
     </div>

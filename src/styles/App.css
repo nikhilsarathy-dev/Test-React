@@ -172,6 +172,34 @@
   font-style: italic;
 }
 
+/* Critical Window Card Status Colors */
+.critical-window-card.valid {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 3px solid #28a745;
+}
+
+.critical-window-card.valid .metric-value {
+  color: #28a745;
+}
+
+.critical-window-card.warning {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 3px solid #ffc107;
+}
+
+.critical-window-card.warning .metric-value {
+  color: #d39e00;
+}
+
+.critical-window-card.invalid {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 3px solid #dc3545;
+}
+
+.critical-window-card.invalid .metric-value {
+  color: #dc3545;
+}
+
 .visa-notice {
   background: #fff3cd;
   border: 2px solid #ffc107;
@@ -271,6 +299,31 @@
   z-index: 4;
 }
 
+.visit-pole {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  z-index: 5;
+}
+
+.start-pole {
+  left: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+.end-pole {
+  right: 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.visit-block-text {
+  position: relative;
+  z-index: 4;
+}
+
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
@@ -333,10 +386,24 @@
   flex-direction: column;
 }
 
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 15px;
+}
+
 .timeline-title {
   color: #333;
-  margin-bottom: 12px;
+  margin: 0;
   font-size: 1.2em;
+}
+
+.timeline-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .timeline-wrapper {
@@ -457,9 +524,40 @@
 }
 
 .stay-dates {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-size: 0.85em;
-  opacity: 0.95;
-  line-height: 1.3;
+}
+
+.date-badge {
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  backdrop-filter: blur(5px);
+}
+
+.date-label {
+  font-size: 0.7em;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+.date-value {
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.date-separator {
+  font-size: 1.2em;
+  font-weight: bold;
+  opacity: 0.7;
 }
 
 .stay-duration {

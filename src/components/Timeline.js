@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { getMonthsArray, dateToPosition, positionToDate, calculateCriticalWindow } from '../utils/dateUtils';
 import VisitBar from './VisitBar';
 
-const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months, onUpdateStay, onDeleteStay, showWindow, currentViewedWindow }) => {
+const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months, onUpdateStay, onDeleteStay, showWindow, currentViewedWindow, onAddStay, onReset, onToggleWindow }) => {
   const timelineRef = useRef(null);
   const [dragState, setDragState] = useState(null);
 
@@ -106,7 +106,16 @@ const Timeline = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Months
 
   return (
     <div className="timeline-container">
-      <h3 className="timeline-title">📅 Timeline View</h3>
+      <div className="timeline-header">
+        <h3 className="timeline-title">📅 Timeline View</h3>
+        <div className="timeline-controls">
+          <button className="button" onClick={onAddStay}>➕ Add Visit</button>
+          <button className="button" onClick={onReset}>🔄 Reset</button>
+          <button className="button" onClick={onToggleWindow}>
+            {showWindow ? '👁️ Hide Window' : '👁️ Show Window'}
+          </button>
+        </div>
+      </div>
       <div className="timeline-wrapper">
         <div
           className="timeline"
