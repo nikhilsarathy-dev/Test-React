@@ -319,6 +319,35 @@
   border-radius: 0 4px 4px 0;
 }
 
+.visit-flag {
+  position: absolute;
+  top: -8px;
+  font-size: 1.2em;
+  z-index: 6;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: wave 2s ease-in-out infinite;
+}
+
+.start-flag {
+  left: -2px;
+}
+
+.end-flag {
+  right: -2px;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
 .visit-block-text {
   position: relative;
   z-index: 4;

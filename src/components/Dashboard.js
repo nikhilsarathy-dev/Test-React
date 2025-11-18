@@ -181,7 +181,9 @@ const Dashboard = ({ stays, visaStart, visaEnd, maxDaysIn18Months, daysIn18Month
                   title={`${visit.stay.name}: ${visit.stay.start.toLocaleDateString()} - ${visit.stay.end.toLocaleDateString()}`}
                 >
                   <div className="visit-pole start-pole"></div>
+                  <div className="visit-flag start-flag">🚩</div>
                   <span className="visit-block-text">{visit.stay.name}: {visit.months}mo ({visit.days}d)</span>
+                  <div className="visit-flag end-flag">🏁</div>
                   <div className="visit-pole end-pole"></div>
                 </div>
               ))}
